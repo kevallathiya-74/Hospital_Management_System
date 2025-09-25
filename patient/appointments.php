@@ -45,7 +45,14 @@ include '../includes/header.php';
                     <td><?= htmlspecialchars($appt['appointment_date']) ?></td>
                     <td><?= htmlspecialchars($appt['appointment_time']) ?></td>
                     <td><?= htmlspecialchars($appt['doctor_name']) ?></td>
-                    <td><span class="badge bg-<?= $appt['status'] === 'scheduled' ? 'warning' : ($appt['status'] === 'completed' ? 'success' : 'secondary') ?> text-uppercase"><?= htmlspecialchars($appt['status']) ?></span></td>
+                    <td>
+                        <span class="badge bg-<?= $appt['status'] === 'scheduled' || $appt['status'] === 'pending' ? 'warning' : ($appt['status'] === 'approved' || $appt['status'] === 'completed' ? 'success' : 'danger') ?> text-uppercase">
+                            <?= htmlspecialchars($appt['status']) ?>
+                        </span>
+                        <?php if ($appt['status'] === 'rejected' && !empty($appt['rejection_reason'])): ?>
+                            <i class="fas fa-info-circle text-danger ms-1" data-bs-toggle="tooltip" data-bs-placement="top" title="Reason: <?= htmlspecialchars($appt['rejection_reason']) ?>"></i>
+                        <?php endif; ?>
+                    </td>
                     <td><?= htmlspecialchars($appt['reason']) ?></td>
                 </tr>
                 <?php endforeach; ?>
@@ -53,4 +60,15 @@ include '../includes/header.php';
         </tbody>
     </table>
 </div>
+
+<script>
+    // Initialize tooltips (if not already done by script.js)
+    document.addEventListener('DOMContentLoaded', function () {
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        })
+    });
+</script>
+
 <?php include '../includes/footer.php'; ?>

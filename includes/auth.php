@@ -110,6 +110,7 @@ function getRoleNavLinks() {
         case 'doctor':
             $links = [
                 ['../doctor/appointments.php', 'fas fa-calendar-check', 'My Appointments'],
+                ['../doctor/schedule.php', 'fas fa-clock', 'My Schedule'], // NEW
                 ['../doctor/patients.php', 'fas fa-users', 'Patients'],
                 ['../doctor/prescriptions.php', 'fas fa-prescription', 'Prescriptions'],
             ];
@@ -118,12 +119,15 @@ function getRoleNavLinks() {
             $links = [
                 ['../staff/register_patient.php', 'fas fa-user-plus', 'Register Patient'],
                 ['../staff/schedule_appointment.php', 'fas fa-calendar-plus', 'Schedule Appointment'],
+                ['../staff/available_doctors.php', 'fas fa-user-md', 'Available Doctors'], // NEW
+                ['../staff/appointments.php', 'fas fa-calendar-check', 'Manage Appointments'], // NEW
                 ['../staff/billing.php', 'fas fa-file-invoice-dollar', 'Billing'],
             ];
             break;
         case 'patient':
             $links = [
                 ['../patient/appointments.php', 'fas fa-calendar-check', 'My Appointments'],
+                ['../patient/available_doctors.php', 'fas fa-user-md', 'Available Doctors'], // NEW
                 ['../patient/reports.php', 'fas fa-file-medical', 'My Reports'],
                 ['../patient/profile.php', 'fas fa-user', 'Profile'],
             ];
@@ -143,7 +147,7 @@ function getRoleDashboardStats($pdo, $userId) {
         case 'admin':
             $stats[] = ['Doctors', $pdo->query("SELECT COUNT(*) FROM doctors WHERE status = 'active'")->fetchColumn(), 'fa-user-md', 'primary'];
             $stats[] = ['Patients', $pdo->query("SELECT COUNT(*) FROM patients WHERE status = 'active'")->fetchColumn(), 'fa-users', 'success'];
-            $stats[] = ['Appointments', $pdo->query("SELECT COUNT(*) FROM appointments WHERE status = 'scheduled'")->fetchColumn(), 'fa-calendar-check', 'warning'];
+            $stats[] = ['Appointments', $pdo->query("SELECT COUNT(*) FROM appointments WHERE status = 'pending'")->fetchColumn(), 'fa-calendar-check', 'warning']; // Changed to pending
             $stats[] = ['Rooms', $pdo->query("SELECT COUNT(*) FROM rooms WHERE status = 'available'")->fetchColumn(), 'fa-bed', 'info'];
             $stats[] = ['Pending Bills', $pdo->query("SELECT COUNT(*) FROM bills WHERE status = 'pending'")->fetchColumn(), 'fa-file-invoice-dollar', 'danger'];
             break;
@@ -154,24 +158,24 @@ function getRoleDashboardStats($pdo, $userId) {
             $doctor_data = $stmt_doctor_id->fetch(PDO::FETCH_ASSOC);
             $doctor_id = $doctor_data ? $doctor_data['id'] : 0;
 
-            $stmt_scheduled = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE doctor_id = ? AND status = 'scheduled'");
-            $stmt_scheduled->execute([$doctor_id]);
-            $scheduled_appointments = $stmt_scheduled->fetchColumn();
+            $stmt_pending = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE doctor_id = ? AND status = 'pending'");
+            $stmt_pending->execute([$doctor_id]);
+            $pending_appointments = $stmt_pending->fetchColumn();
 
-            $stmt_completed = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE doctor_id = ? AND status = 'completed'");
-            $stmt_completed->execute([$doctor_id]);
-            $completed_appointments = $stmt_completed->fetchColumn();
+            $stmt_approved = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE doctor_id = ? AND status = 'approved'");
+            $stmt_approved->execute([$doctor_id]);
+            $approved_appointments = $stmt_approved->fetchColumn();
 
             $stmt_prescriptions = $pdo->prepare("SELECT COUNT(*) FROM prescriptions WHERE doctor_id = ?");
             $stmt_prescriptions->execute([$doctor_id]);
             $prescriptions_count = $stmt_prescriptions->fetchColumn();
 
-            $stats[] = ['Scheduled Appointments', $scheduled_appointments, 'fa-calendar-check', 'primary'];
-            $stats[] = ['Completed Appointments', $completed_appointments, 'fa-check', 'success'];
+            $stats[] = ['Pending Appointments', $pending_appointments, 'fa-calendar-check', 'warning']; // Changed to pending
+            $stats[] = ['Approved Appointments', $approved_appointments, 'fa-check', 'success']; // New stat
             $stats[] = ['Prescriptions', $prescriptions_count, 'fa-prescription', 'info'];
             break;
         case 'staff':
-            $stats[] = ['Scheduled Appointments', $pdo->query("SELECT COUNT(*) FROM appointments WHERE status = 'scheduled'")->fetchColumn(), 'fa-calendar-check', 'primary'];
+            $stats[] = ['Pending Appointments', $pdo->query("SELECT COUNT(*) FROM appointments WHERE status = 'pending'")->fetchColumn(), 'fa-calendar-check', 'warning']; // Changed to pending
             $stats[] = ['Pending Bills', $pdo->query("SELECT COUNT(*) FROM bills WHERE status = 'pending'")->fetchColumn(), 'fa-file-invoice-dollar', 'danger'];
             $stats[] = ['Active Patients', $pdo->query("SELECT COUNT(*) FROM patients WHERE status = 'active'")->fetchColumn(), 'fa-users', 'success'];
             break;
@@ -181,15 +185,20 @@ function getRoleDashboardStats($pdo, $userId) {
             $pat = $stmt->fetch(PDO::FETCH_ASSOC);
             $pid = $pat ? $pat['id'] : 0;
 
-            $stmt_upcoming = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE patient_id = ? AND status = 'scheduled'");
-            $stmt_upcoming->execute([$pid]);
-            $upcoming_appointments = $stmt_upcoming->fetchColumn();
+            $stmt_pending = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE patient_id = ? AND status = 'pending'");
+            $stmt_pending->execute([$pid]);
+            $pending_appointments = $stmt_pending->fetchColumn();
+
+            $stmt_approved = $pdo->prepare("SELECT COUNT(*) FROM appointments WHERE patient_id = ? AND status = 'approved'");
+            $stmt_approved->execute([$pid]);
+            $approved_appointments = $stmt_approved->fetchColumn();
 
             $stmt_reports = $pdo->prepare("SELECT COUNT(*) FROM medical_reports WHERE patient_id = ?");
             $stmt_reports->execute([$pid]);
             $medical_reports_count = $stmt_reports->fetchColumn();
 
-            $stats[] = ['Upcoming Appointments', $upcoming_appointments, 'fa-calendar-check', 'primary'];
+            $stats[] = ['Pending Appointments', $pending_appointments, 'fa-calendar-check', 'warning']; // Changed to pending
+            $stats[] = ['Approved Appointments', $approved_appointments, 'fa-check', 'success']; // New stat
             $stats[] = ['Medical Reports', $medical_reports_count, 'fa-file-medical', 'info'];
             break;
     }
