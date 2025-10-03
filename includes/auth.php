@@ -119,13 +119,14 @@ function getRoleNavLinks() {
             $links = [
                 ['../staff/register_patient.php', 'fas fa-user-plus', 'Register Patient'],
                 ['../staff/schedule_appointment.php', 'fas fa-calendar-plus', 'Schedule Appointment'],
-                ['../staff/available_doctors.php', 'fas fa-user-md', 'Available Doctors'], // NEW
                 ['../staff/appointments.php', 'fas fa-calendar-check', 'Manage Appointments'], // NEW
                 ['../staff/billing.php', 'fas fa-file-invoice-dollar', 'Billing'],
             ];
             break;
         case 'patient':
             $links = [
+                ['../patient/dashboard.php', 'fas fa-tachometer-alt', 'Dashboard'], // Added for consistency
+                ['../patient/schedule_appointment.php', 'fas fa-calendar-plus', 'Schedule Appointment'], // ADDED THIS LINE
                 ['../patient/appointments.php', 'fas fa-calendar-check', 'My Appointments'],
                 ['../patient/available_doctors.php', 'fas fa-user-md', 'Available Doctors'], // NEW
                 ['../patient/reports.php', 'fas fa-file-medical', 'My Reports'],
